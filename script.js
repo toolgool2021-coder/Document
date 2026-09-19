@@ -1,5 +1,5 @@
 (() => {
-  const STORAGE_KEY = 'attendance-statuses-v4';
+  const STORAGE_KEY = 'attendance-status-v4';
   const listEl = document.querySelector('#people-list');
   const resultEl = document.querySelector('#result');
   const totalEl = document.querySelector('#total-count');
@@ -22,17 +22,19 @@
   }
 
   function getType(index) {
-    const status = statuses[index];
-    if (!status) return '';
-    return typeof status === 'string' ? status : status.type;
+    const value = statuses[index];
+    if (!value) return '';
+    return typeof value === 'string' ? value : value.type;
   }
 
   function setStatus(index, type) {
     if (type === 'late') {
       const previousTime = statuses[index]?.time || '';
       const time = window.prompt('Введите время прихода, например 08:35:', previousTime);
-      if (time === null || !time.trim()) return;
-      statuses[index] = { type: 'late', time: time.trim() };
+      if (time === null) return;
+      const cleanTime = time.trim();
+      if (!cleanTime) return;
+      statuses[index] = { type: 'late', time: cleanTime };
     } else if (getType(index) === type) {
       delete statuses[index];
     } else {
@@ -49,15 +51,17 @@
     const absent = [];
 
     names.forEach((name, index) => {
-      const status = statuses[index];
       const type = getType(index);
+      const value = statuses[index];
+
       if (type === 'present') present.push(name);
-      if (type === 'late') late.push(`${name} [${status.time}]`);
+      if (type === 'late') late.push(`${name} [${value.time}]`);
       if (type === 'absent') absent.push(name);
     });
 
     const marked = present.length + late.length + absent.length;
     totalEl.textContent = `Отмечено: ${marked} из ${names.length}`;
+
     resultEl.value = [
       `Кто есть (${present.length}):`,
       present.length ? present.join(', ') : '—',
@@ -70,7 +74,7 @@
     ].join('\n');
   }
 
-  function makeButton(label, type, name, active) {
+  function createActionButton(label, type, name, active) {
     const button = document.createElement('button');
     button.type = 'button';
     button.className = `action-btn ${type}${active ? ' active' : ''}`;
@@ -89,23 +93,23 @@
       const card = document.createElement('div');
       card.className = `note ${type}`;
 
-      const nameEl = document.createElement('span');
-      nameEl.className = 'person-name';
-      nameEl.textContent = name;
+      const label = document.createElement('span');
+      label.className = 'person-name';
+      label.textContent = name;
 
       const actions = document.createElement('div');
       actions.className = 'note-actions';
 
-      const presentButton = makeButton('✓', 'present', name, type === 'present');
-      const absentButton = makeButton('✕', 'absent', name, type === 'absent');
-      const lateButton = makeButton('⏱️', 'late', name, type === 'late');
+      const presentButton = createActionButton('✓', 'present', name, type === 'present');
+      const absentButton = createActionButton('✕', 'absent', name, type === 'absent');
+      const lateButton = createActionButton('⏱️', 'late', name, type === 'late');
 
       presentButton.addEventListener('click', () => setStatus(index, 'present'));
       absentButton.addEventListener('click', () => setStatus(index, 'absent'));
       lateButton.addEventListener('click', () => setStatus(index, 'late'));
 
       actions.append(presentButton, absentButton, lateButton);
-      card.append(nameEl, actions);
+      card.append(label, actions);
       listEl.appendChild(card);
     });
 
@@ -122,12 +126,13 @@
   copyButton.addEventListener('click', async () => {
     try {
       await navigator.clipboard.writeText(resultEl.value);
+      copyStatus.textContent = 'Текст скопирован.';
     } catch (error) {
       resultEl.focus();
       resultEl.select();
       document.execCommand('copy');
+      copyStatus.textContent = 'Текст скопирован.';
     }
-    copyStatus.textContent = 'Текст скопирован.';
   });
 
   renderList();
