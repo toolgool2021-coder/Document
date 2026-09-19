@@ -1,5 +1,5 @@
 (() => {
-  const STORAGE_KEY = 'attendance-status-v2';
+  const STORAGE_KEY = 'attendance-status-v3';
   const listEl = document.querySelector('#people-list');
   const resultEl = document.querySelector('#result');
   const totalEl = document.querySelector('#total-count');
@@ -11,8 +11,7 @@
 
   function loadStatuses() {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      return saved ? JSON.parse(saved) : {};
+      return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
     } catch (error) {
       return {};
     }
@@ -22,20 +21,65 @@
     localStorage.setItem(STORAGE_KEY, JSON.stringify(statuses));
   }
 
+  function setStatus(index, status, time = '') {
+    if (statuses[index]?.type === status && status !== 'late') {
+      delete statuses[index];
+    } else if (status === 'late') {
+      const enteredTime = window.prompt('Во сколько пришёл человек?', statuses[index]?.time || '');
+      if (enteredTime === null) return;
+      const cleanTime = enteredTime.trim();
+      if (!cleanTime) return;
+      statuses[index] = { type: 'late', time: cleanTime };
+    } else {
+      statuses[index] = { type: status };
+    }
+    saveStatuses();
+    renderList();
+  }
+
+  function getStatus(index) {
+    const value = statuses[index];
+    if (!value) return '';
+    // Совместимость со старыми отметками: present/absent были строками.
+    return typeof value === 'string' ? value : value.type;
+  }
+
   function updateResult(names) {
-    const present = names.filter((_, index) => statuses[index] === 'present');
-    const absent = names.filter((_, index) => statuses[index] === 'absent');
-    const marked = present.length + absent.length;
+    const present = [];
+    const absent = [];
+    const late = [];
 
+    names.forEach((name, index) => {
+      const value = statuses[index];
+      const type = getStatus(index);
+      if (type === 'present') present.push(name);
+      if (type === 'absent') absent.push(name);
+      if (type === 'late') late.push(`${name} [${value.time}]`);
+    });
+
+    const marked = present.length + absent.length + late.length;
     totalEl.textContent = `Отмечено: ${marked} из ${names.length}`;
-
     resultEl.value = [
       `Кто есть (${present.length}):`,
       present.length ? present.join(', ') : '—',
       '',
+      `Опоздавшие (${late.length}):`,
+      late.length ? late.join(', ') : '—',
+      '',
       `Кого нет (${absent.length}):`,
       absent.length ? absent.join(', ') : '—'
     ].join('\n');
+  }
+
+  function createActionButton(label, className, name, pressed, callback) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = `action-btn ${className} ${pressed ? 'active' : ''}`;
+    button.textContent = label;
+    button.setAttribute('aria-label', `${name} — ${className === 'present' ? 'есть' : className === 'absent' ? 'нет' : 'опоздал'}`);
+    button.setAttribute('aria-pressed', String(pressed));
+    button.addEventListener('click', callback);
+    return button;
   }
 
   function renderList() {
@@ -43,7 +87,7 @@
     listEl.innerHTML = '';
 
     names.forEach((name, index) => {
-      const status = statuses[index] || '';
+      const status = getStatus(index);
       const card = document.createElement('div');
       card.className = `note ${status}`;
 
@@ -53,34 +97,12 @@
 
       const actions = document.createElement('div');
       actions.className = 'note-actions';
+      actions.append(
+        createActionButton('✓', 'present', name, status === 'present', () => setStatus(index, 'present')),
+        createActionButton('✕', 'absent', name, status === 'absent', () => setStatus(index, 'absent')),
+        createActionButton('⏱️', 'late', name, status === 'late', () => setStatus(index, 'late'))
+      );
 
-      const presentBtn = document.createElement('button');
-      presentBtn.type = 'button';
-      presentBtn.className = `action-btn present ${status === 'present' ? 'active' : ''}`;
-      presentBtn.textContent = '✓';
-      presentBtn.setAttribute('aria-label', `${name} — есть`);
-      presentBtn.setAttribute('aria-pressed', String(status === 'present'));
-
-      const absentBtn = document.createElement('button');
-      absentBtn.type = 'button';
-      absentBtn.className = `action-btn absent ${status === 'absent' ? 'active' : ''}`;
-      absentBtn.textContent = '✕';
-      absentBtn.setAttribute('aria-label', `${name} — нет`);
-      absentBtn.setAttribute('aria-pressed', String(status === 'absent'));
-
-      presentBtn.addEventListener('click', () => {
-        statuses[index] = statuses[index] === 'present' ? '' : 'present';
-        saveStatuses();
-        renderList();
-      });
-
-      absentBtn.addEventListener('click', () => {
-        statuses[index] = statuses[index] === 'absent' ? '' : 'absent';
-        saveStatuses();
-        renderList();
-      });
-
-      actions.append(presentBtn, absentBtn);
       card.append(label, actions);
       listEl.appendChild(card);
     });
