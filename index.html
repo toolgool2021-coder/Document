@@ -4,38 +4,47 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Список присутствующих</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <div class="page">
+  <div class="page-shell">
     <header class="topbar">
-      <span class="chip">Public list</span>
+      <span class="chip">Toolgool UI</span>
       <h1>Список присутствующих</h1>
     </header>
 
-    <section class="panel">
-      <div class="panel-head">
-        <h2>Список</h2>
-        <button id="resetButton" class="secondary-btn" type="button">Сбросить</button>
-      </div>
-      <div id="people-list" class="notes-list"></div>
-    </section>
+    <main class="app-card">
+      <section class="panel list-panel">
+        <div class="panel-head">
+          <div>
+            <h2>Список</h2>
+            <p id="total-count">Отмечено: 0 из 0</p>
+          </div>
+          <button id="resetButton" class="secondary-btn" type="button">Сбросить</button>
+        </div>
+        <div id="people-list" class="notes-list"></div>
+      </section>
 
-    <section class="panel output-panel">
-      <div class="panel-head">
-        <h2>Готовый текст</h2>
-        <button id="copyButton" class="primary-btn" type="button">Копировать</button>
-      </div>
-
-      <div id="total-count" class="meta">Отмечено: 0 из 0</div>
-      <textarea id="result" readonly aria-label="Готовый текст"></textarea>
-      <div id="copy-status" class="copy-status" aria-live="polite"></div>
-    </section>
+      <section class="panel output-panel">
+        <div class="panel-head">
+          <div>
+            <h2>Готовый текст</h2>
+            <p>Можно скопировать и отправить</p>
+          </div>
+          <button id="copyButton" class="primary-btn" type="button">Копировать</button>
+        </div>
+        <textarea id="result" readonly aria-label="Готовый текст"></textarea>
+        <div id="copy-status" class="copy-status" aria-live="polite"></div>
+      </section>
+    </main>
 
     <footer class="site-footer">
-      <a class="profile-link" href="https://toolgool.duckdns.org" target="_blank" rel="noopener noreferrer" aria-label="Открыть сайт Toolgool2021-coder">
-        <img class="profile-avatar" src="https://avatars.githubusercontent.com/u/236378052?v=4" alt="Аватар Toolgool2021-coder" />
-        <span class="profile-name">Toolgool</span>
+      <a class="profile-link" href="https://toolgool.duckdns.org" target="_blank" rel="noopener noreferrer">
+        <img class="profile-avatar" src="https://avatars.githubusercontent.com/u/236378052?v=4" alt="Toolgool2021-coder" />
+        <span class="profile-name">Toolgool2021-coder</span>
       </a>
     </footer>
   </div>
